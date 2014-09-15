@@ -37,13 +37,15 @@ class List_MediaFiles_Widget extends WP_Widget {
 		echo $args['before_widget'];
 		if ( ! empty( $instance['title'] ) ) {
 			echo $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ). $args['after_title'];
+		}else{
+			echo $args['before_title'] . apply_filters( 'widget_title', __( 'Uploaded media', 'text_domain' )). $args['after_title'];
 		}	
 
 		$args = array(
 		    'post_type' => 'attachment',
 		    'numberposts' => -1,
 		    'post_status' => null,
-		    'post_parent' => null, // any parent
+		    'post_parent' => null, 
 		    ); 
 		$attachments = get_posts($args);
 		if ($attachments) {
@@ -64,6 +66,18 @@ class List_MediaFiles_Widget extends WP_Widget {
 	 */
 	public function form( $instance ) {
 		// outputs the options form on admin
+		if ( isset( $instance[ 'title' ] ) ) {
+			$title = $instance[ 'title' ];
+		}
+		else {
+			$title = __( 'Uploaded media', 'text_domain' );
+		}
+		?>
+				<p>
+				<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label> 
+				<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>">
+				</p>
+		<?php 
 	}
 
 	/**
@@ -74,6 +88,10 @@ class List_MediaFiles_Widget extends WP_Widget {
 	 */
 	public function update( $new_instance, $old_instance ) {
 		// processes widget options to be saved
+		$instance = array();
+		$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
+
+		return $instance;
 	}
 }
 
