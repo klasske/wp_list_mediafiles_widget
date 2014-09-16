@@ -45,12 +45,19 @@ class List_MediaFiles_Widget extends WP_Widget {
 			$number_of_posts = $instance['show_number_files'];
 		}
 
+		$orderby = 'date';
+		if ( ! empty( $instance['sort_parameter'] ) ) {
+			$orderby = $instance['sort_parameter'];
+		}
+
+
+
 		$args = array(
 		    'post_type' => 'attachment',
 		    'numberposts' => $number_of_posts,
 		    'post_status' => null,
 		    'post_parent' => null, 
-			'orderby' => 'post_date',
+			'orderby' => $orderby,
 			'order' => 'DESC',
 		    ); 
 		$attachments = get_posts($args);
@@ -99,6 +106,37 @@ class List_MediaFiles_Widget extends WP_Widget {
 					type="number" value="<?php echo esc_attr( $number_of_files ); ?>">
 				</p>
 		<?php
+		if ( isset( $instance[ 'sort_parameter' ] ) ) {
+			$orderby = $instance[ 'sort_parameter' ];
+		}
+		else {
+			$orderby = 'date';
+		}
+		?>
+				<p>
+				<label for="<?php echo $this->get_field_id( 'sort_parameter' ); ?>"><?php _e( 'Sort by:' ); ?></label>
+				<select class="widefat"
+					id="<?php echo $this->get_field_id( 'sort_parameter' ); ?>" 
+					name="<?php echo $this->get_field_name( 'sort_parameter' ); ?>" >
+					<option value="date" <?php echo (($orderby == 'date') ? 'selected' : ''); ?>>Date</option>
+					<option value="title" <?php echo (($orderby == 'title') ? 'selected' : ''); ?>>Title</option>
+					<option value="rand" <?php echo (($orderby == 'rand') ? 'selected' : ''); ?>>Random</option>
+
+				</select>
+				</p>
+		<?php
+		if ( isset( $instance[ 'sort_direction' ] ) ) {
+			$sort_direction = $instance[ 'sort_direction' ];
+		}
+		else {
+			$sort_direction = 'DESC';
+		}
+		?>
+				<p>
+				<label for="<?php echo $this->get_field_id( 'sort_direction' ); ?>"><?php _e( 'Sort direction:' ); ?></label>
+				<input class="widefat" id="<?php echo $this->get_field_id( 'sort_direction' ); ?>" name="<?php echo $this->get_field_name( 'sort_direction' ); ?>" type="text" value="<?php echo esc_attr( $sort_direction ); ?>">
+				</p>
+		<?php
 				
 	}
 
@@ -113,6 +151,7 @@ class List_MediaFiles_Widget extends WP_Widget {
 		$instance = array();
 		$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
 		$instance['show_number_files'] = ( ! empty( $new_instance['show_number_files'] ) ) ? strip_tags( $new_instance['show_number_files'] ) : '';
+		$instance['sort_parameter'] = ( ! empty( $new_instance['sort_parameter'] ) ) ? strip_tags( $new_instance['sort_parameter'] ) : '';
 
 		return $instance;
 	}
