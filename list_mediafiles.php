@@ -40,12 +40,18 @@ class List_MediaFiles_Widget extends WP_Widget {
 		}else{
 			echo $args['before_title'] . apply_filters( 'widget_title', __( 'Uploaded media', 'text_domain' )). $args['after_title'];
 		}	
+		$number_of_posts = -1;
+		if ( ! empty( $instance['show_number_files'] ) ) {
+			$number_of_posts = $instance['show_number_files'];
+		}
 
 		$args = array(
 		    'post_type' => 'attachment',
-		    'numberposts' => -1,
+		    'numberposts' => $number_of_posts,
 		    'post_status' => null,
 		    'post_parent' => null, 
+			'orderby' => 'post_date',
+			'order' => 'DESC',
 		    ); 
 		$attachments = get_posts($args);
 		if ($attachments) {
@@ -77,7 +83,23 @@ class List_MediaFiles_Widget extends WP_Widget {
 				<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label> 
 				<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>">
 				</p>
-		<?php 
+		<?php
+		if ( isset( $instance[ 'show_number_files' ] ) ) {
+			$number_of_files = $instance[ 'show_number_files' ];
+		}
+		else {
+			$number_of_files = 5;
+		}
+		?>
+				<p>
+				<label for="<?php echo $this->get_field_id( 'show_number_files' ); ?>"><?php _e( 'Number of files to show:' ); ?></label> 
+				<input class="widefat" 
+					id="<?php echo $this->get_field_id( 'show_number_files' ); ?>" 
+					name="<?php echo $this->get_field_name( 'show_number_files' ); ?>" 
+					type="number" value="<?php echo esc_attr( $number_of_files ); ?>">
+				</p>
+		<?php
+				
 	}
 
 	/**
@@ -90,6 +112,7 @@ class List_MediaFiles_Widget extends WP_Widget {
 		// processes widget options to be saved
 		$instance = array();
 		$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
+		$instance['show_number_files'] = ( ! empty( $new_instance['show_number_files'] ) ) ? strip_tags( $new_instance['show_number_files'] ) : '';
 
 		return $instance;
 	}
