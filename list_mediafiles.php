@@ -37,9 +37,8 @@ class List_MediaFiles_Widget extends WP_Widget {
 		echo $args['before_widget'];
 		if ( ! empty( $instance['title'] ) ) {
 			echo $args['before_title'] . apply_filters( 'widget_title', $instance['title'] ). $args['after_title'];
-		}else{
-			echo $args['before_title'] . apply_filters( 'widget_title', __( 'Uploaded media', 'text_domain' )). $args['after_title'];
-		}	
+		}
+				
 		$number_of_posts = -1;
 		if ( ! empty( $instance['show_number_files'] ) ) {
 			$number_of_posts = $instance['show_number_files'];
@@ -49,27 +48,45 @@ class List_MediaFiles_Widget extends WP_Widget {
 		if ( ! empty( $instance['sort_parameter'] ) ) {
 			$orderby = $instance['sort_parameter'];
 		}
+		
+		$order_direction = 'DESC';
+		if ( ! empty( $instance['sort_direction'] ) ) {
+			$order_direction = $instance['sort_direction'];
+		}
 
-
-
+		// TODO: get template choice. Echo css based on choice
+		
+		echo '<style>.list_mediafiles_box{';
+		echo 'border: 1px solid #e2e2e2;';
+		echo 'margin: 5px;';
+		echo 'padding: 5px;'; 
+		echo '} .list_mediafiles_box img{';
+		echo 'max-width:100px;';
+		echo '} </style>';
+		
 		$args = array(
 		    'post_type' => 'attachment',
 		    'numberposts' => $number_of_posts,
 		    'post_status' => null,
 		    'post_parent' => null, 
 			'orderby' => $orderby,
-			'order' => 'DESC',
+			'order' => $order_direction,
 		    ); 
+		
 		$attachments = get_posts($args);
 		if ($attachments) {
 		    foreach ($attachments as $post) {
+		    	echo '<div class="list_mediafiles_box">';
 		        setup_postdata($post);
-		        echo '<h3>' . get_the_title($post->ID) . '</h3>';
+		        echo '<h4>' . get_the_title($post->ID) . '</h4>';
 		        the_attachment_link($post->ID, false);
+		        echo '<span class="aligncenter" style="word-break:break-word;">';
 		        the_excerpt();
+		        echo '</span>';
+		    	echo '</div>';
 		    }
 		}
-		echo $args['after_widget'];
+		//echo $args['after_widget'];
 	}
 
 	/**
@@ -79,24 +96,23 @@ class List_MediaFiles_Widget extends WP_Widget {
 	 */
 	public function form( $instance ) {
 		// outputs the options form on admin
-		if ( isset( $instance[ 'title' ] ) ) {
-			$title = $instance[ 'title' ];
-		}
-		else {
-			$title = __( 'Uploaded media', 'text_domain' );
-		}
+		
+		$defaults = array( 
+				'title' => __( 'Uploaded media', 'text_domain' ), 
+				'show_number_files' => 5, 
+				'sort_parameter' => 'date', 
+				'sort_direction' => 'DESC' );
+		$instance = wp_parse_args( (array) $instance, $defaults );
+		
+		
+		$title = $instance[ 'title' ];
 		?>
 				<p>
 				<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label> 
 				<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>">
 				</p>
 		<?php
-		if ( isset( $instance[ 'show_number_files' ] ) ) {
-			$number_of_files = $instance[ 'show_number_files' ];
-		}
-		else {
-			$number_of_files = 5;
-		}
+		$number_of_files = $instance[ 'show_number_files' ];
 		?>
 				<p>
 				<label for="<?php echo $this->get_field_id( 'show_number_files' ); ?>"><?php _e( 'Number of files to show:' ); ?></label> 
@@ -106,12 +122,7 @@ class List_MediaFiles_Widget extends WP_Widget {
 					type="number" value="<?php echo esc_attr( $number_of_files ); ?>">
 				</p>
 		<?php
-		if ( isset( $instance[ 'sort_parameter' ] ) ) {
-			$orderby = $instance[ 'sort_parameter' ];
-		}
-		else {
-			$orderby = 'date';
-		}
+		$orderby = $instance[ 'sort_parameter' ];
 		?>
 				<p>
 				<label for="<?php echo $this->get_field_id( 'sort_parameter' ); ?>"><?php _e( 'Sort by:' ); ?></label>
@@ -125,16 +136,30 @@ class List_MediaFiles_Widget extends WP_Widget {
 				</select>
 				</p>
 		<?php
-		if ( isset( $instance[ 'sort_direction' ] ) ) {
-			$sort_direction = $instance[ 'sort_direction' ];
-		}
-		else {
-			$sort_direction = 'DESC';
-		}
+		$sort_direction = $instance[ 'sort_direction' ];
 		?>
 				<p>
-				<label for="<?php echo $this->get_field_id( 'sort_direction' ); ?>"><?php _e( 'Sort direction:' ); ?></label>
-				<input class="widefat" id="<?php echo $this->get_field_id( 'sort_direction' ); ?>" name="<?php echo $this->get_field_name( 'sort_direction' ); ?>" type="text" value="<?php echo esc_attr( $sort_direction ); ?>">
+				<span><?php _e( 'Sort direction:' ); ?></span>
+				<label for="<?php echo $this->get_field_id( 'sort_direction' ) . '-desc'; ?>"><?php _e( 'Descending' ); ?></label>
+				
+				<input 
+					class="widefat" 
+					id="<?php echo $this->get_field_id( 'sort_direction' ) . '-desc'; ?>" 
+					name="<?php echo $this->get_field_name( 'sort_direction' ); ?>" 
+					type="radio" 
+					value="DESC"
+					<?php echo (($sort_direction == 'DESC') ? 'checked' : ''); ?>
+					>
+				<label for="<?php echo $this->get_field_id( 'sort_direction' ) . '-asc'; ?>"><?php _e( 'Ascending' ); ?></label>
+				<input 
+					class="widefat" 
+					id="<?php echo $this->get_field_id( 'sort_direction' ) . '-asc'; ?>" 
+					name="<?php echo $this->get_field_name( 'sort_direction' ); ?>" 
+					type="radio" 
+					value="ASC"
+					<?php echo (($sort_direction == 'ASC') ? 'checked' : ''); ?>
+					>	
+					
 				</p>
 		<?php
 				
@@ -152,7 +177,8 @@ class List_MediaFiles_Widget extends WP_Widget {
 		$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
 		$instance['show_number_files'] = ( ! empty( $new_instance['show_number_files'] ) ) ? strip_tags( $new_instance['show_number_files'] ) : '';
 		$instance['sort_parameter'] = ( ! empty( $new_instance['sort_parameter'] ) ) ? strip_tags( $new_instance['sort_parameter'] ) : '';
-
+		$instance['sort_direction'] = ( ! empty( $new_instance['sort_direction'] ) ) ? strip_tags( $new_instance['sort_direction'] ) : '';
+		
 		return $instance;
 	}
 }
