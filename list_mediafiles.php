@@ -162,6 +162,26 @@ class List_MediaFiles_Widget extends WP_Widget {
 					
 				</p>
 		<?php
+		
+		$args = array(
+				'post_type' => 'attachment',
+				'numberposts' => -1,
+				'post_status' => null,
+				'post_parent' => null,
+				'orderby' => 'date',
+				'order' => 'DESC',
+		);
+		
+		$attachments = get_posts($args);
+		if ($attachments) {
+			foreach ($attachments as $post) {
+				setup_postdata($post);
+				// TODO: add checkbox 
+				//TODO: add array to instance. if post id in array, checked is true
+				echo '<label>' . get_the_title($post->ID) . '</label>';
+				// TODO: add date
+			}
+		}
 				
 	}
 
