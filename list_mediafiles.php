@@ -53,6 +53,11 @@ class List_MediaFiles_Widget extends WP_Widget {
 		if ( ! empty( $instance['sort_direction'] ) ) {
 			$order_direction = $instance['sort_direction'];
 		}
+		
+		$exclude_ids = array();
+		if ( ! empty( $instance['exclude_ids'] ) ) {
+			$exclude_ids = $instance['exclude_ids'];
+		}
 
 		// TODO: get template choice. Echo css based on choice
 		
@@ -71,6 +76,7 @@ class List_MediaFiles_Widget extends WP_Widget {
 		    'post_parent' => null, 
 			'orderby' => $orderby,
 			'order' => $order_direction,
+			'exclude' => $exclude_ids,	
 		    ); 
 		
 		$attachments = get_posts($args);
@@ -78,8 +84,18 @@ class List_MediaFiles_Widget extends WP_Widget {
 		    foreach ($attachments as $post) {
 		    	echo '<div class="list_mediafiles_box">';
 		        setup_postdata($post);
+		        
+		        
 		        echo '<h4>' . get_the_title($post->ID) . '</h4>';
-		        the_attachment_link($post->ID, false);
+
+                switch($post->post_mime_type){	
+                	case 'image/jpeg':	
+                	case 'image/png':	
+                	case 'image/gif':	
+                		the_attachment_link($post->ID, false); break;
+                	default:	
+		        		echo '<a href="' . get_attachment_link($post->ID) . '"><img src="' . wp_mime_type_icon($post->post_mime_type) . '"></a>';
+		        }
 		        echo '<span class="aligncenter" style="word-break:break-word;">';
 		        the_excerpt();
 		        echo '</span>';
@@ -101,10 +117,11 @@ class List_MediaFiles_Widget extends WP_Widget {
 				'title' => __( 'Uploaded media', 'text_domain' ), 
 				'show_number_files' => 5, 
 				'sort_parameter' => 'date', 
-				'sort_direction' => 'DESC' );
+				'sort_direction' => 'DESC',
+				'exclude_ids' => array()
+		);
 		$instance = wp_parse_args( (array) $instance, $defaults );
-		
-		
+				
 		$title = $instance[ 'title' ];
 		?>
 				<p>
@@ -173,14 +190,26 @@ class List_MediaFiles_Widget extends WP_Widget {
 		);
 		
 		$attachments = get_posts($args);
+		$exclude_ids = (array) $instance[ 'exclude_ids' ];
 		if ($attachments) {
+			echo '<strong>Exclude these files:</strong>';
+			echo '<ul>';
 			foreach ($attachments as $post) {
 				setup_postdata($post);
 				// TODO: add checkbox 
 				//TODO: add array to instance. if post id in array, checked is true
-				echo '<label>' . get_the_title($post->ID) . '</label>';
+				echo '<li><input type="checkbox" 
+					id="' . $this->get_field_id( 'exclude_ids' ) . '-' . $post->ID . '"
+					name="' . $this->get_field_name( 'exclude_ids' ) . '[]" 
+					value="' . $post->ID . '"
+					'; 
+				if (in_array($post->ID, $exclude_ids)){ 
+					echo 'checked';
+				}	
+				echo '><label>' . get_the_title($post->ID) . '</label></li>';
 				// TODO: add date
 			}
+			echo '</ul>';
 		}
 				
 	}
@@ -198,7 +227,7 @@ class List_MediaFiles_Widget extends WP_Widget {
 		$instance['show_number_files'] = ( ! empty( $new_instance['show_number_files'] ) ) ? strip_tags( $new_instance['show_number_files'] ) : '';
 		$instance['sort_parameter'] = ( ! empty( $new_instance['sort_parameter'] ) ) ? strip_tags( $new_instance['sort_parameter'] ) : '';
 		$instance['sort_direction'] = ( ! empty( $new_instance['sort_direction'] ) ) ? strip_tags( $new_instance['sort_direction'] ) : '';
-		
+		$instance['exclude_ids'] = $new_instance['exclude_ids'];
 		return $instance;
 	}
 }
